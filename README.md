@@ -17,8 +17,8 @@ Some holidays are always on the same date so are easy to calculate.
 
 ```javascript
 var Holidays = require('@date/holidays')
-
-var holidays = new Holidays()
+var holidays = Holidays()
+// all in one: var holidays = require('@date/holidays')()
 
 // at this point `holidays` is empty so all calls to isHoliday() return false.
 
