@@ -1,5 +1,5 @@
 assert   = require 'assert'
-holidays = require '../../lib'
+holidays = require('../../lib')()
 
 # test add()
 #  call add(fn) and ensure it's in generators array, how?

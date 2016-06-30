@@ -1,44 +1,43 @@
 
-# store calculated holidays in this
-# store by year, then month, then day of the month
-holidays = {}
+class Holidays
 
-# store holiday generators
-generators = []
+  constructor: () ->
+    # store calculated holidays in this
+    # store by year, then month, then day of the month
+    @holidays = {}
 
-# store the holiday into `holidays` for the specified year
-storeHoliday = (holiday, year) ->
-  # purposely do *not* create object for year because we'd be repeating that
-  # too often. do it elsewhere!
-  # holidays[year] ?= {}
-  holidays[year][holiday.date.month] ?= {}
-  holidays[year][holiday.date.month][holiday.date.day] = holiday.info
-  return
+    # store holiday generators
+    @generators = []
 
-# calculate holidays for the specified year and store them in the cache
-calculateHolidays = (year) ->
+  # store the holiday into `holidays` for the specified year
+  _storeHoliday: (holiday, year) ->
+    # purposely do *not* create object for year because we'd be repeating that
+    # too often. do it elsewhere!
+    # holidays[year] ?= {}
+    @holidays[year][holiday.date.month] ?= {}
+    @holidays[year][holiday.date.month][holiday.date.day] = holiday.info
+    return
 
-  # if we've already calculated the holidays for that year
-  if holidays[year]? then return
+  # calculate holidays for the specified year and store them in the cache
+  _calculateHolidays: (year) ->
 
-  # create object to hold holidays for the specified year
-  holidays[year] = {}
+    # if we've already calculated the holidays for that year
+    if @holidays[year]? then return
 
-  # use generators to produce holidays for the specified year
-  for generate in generators
-    result = generate year
-    if Array.isArray result
-      storeHoliday holiday, year for holiday in result
+    # create object to hold holidays for the specified year
+    @holidays[year] = {}
 
-    else storeHoliday result, year
+    # use generators to produce holidays for the specified year
+    for generate in @generators
+      result = generate year
+      if Array.isArray result
+        @_storeHoliday holiday, year for holiday in result
 
+      else @_storeHoliday result, year
 
-module.exports = ops =
-
-  calculateHolidays: calculateHolidays
 
   isHoliday: (arg1, arg2) ->
-    holiday = ops.getHoliday arg1, arg2
+    holiday = @getHoliday arg1, arg2
 
     return holiday?
 
@@ -63,10 +62,10 @@ module.exports = ops =
     month = date.getMonth()
 
     # ensure we've calculated the holidays for that year and month
-    ops.calculateHolidays year #, month could focus on a month...
+    @_calculateHolidays year #, month could focus on a month...
 
     # get holiday by year, month, and day in the month
-    holiday = holidays[year]?[month]?[date.getDate()]
+    holiday = @holidays[year]?[month]?[date.getDate()]
 
     # if there's no holiday then return null now
     unless holiday? then return null
@@ -85,10 +84,10 @@ module.exports = ops =
     if years?
       # if they specified an array instead of args then unwrap array
       if Array.isArray years[0] then years = years[0]
-      delete holidays[year] for year in years
+      delete @holidays[year] for year in years
 
     else # delete all of them
-      holidays = {}
+      @holidays = {}
 
     return
 
@@ -96,7 +95,7 @@ module.exports = ops =
     if typeof generator is 'function'
 
       # ensure it isn't already in the array
-      for fn in generators
+      for fn in @generators
         if fn is generator then return generator
 
     else # create the generator from the data
@@ -110,7 +109,7 @@ module.exports = ops =
             day  : date.day
         }
 
-    generators.push generator
+    @generators.push generator
 
     # return the function to use in remove() in case we created it
     return generator
@@ -118,10 +117,13 @@ module.exports = ops =
   # TODO: allow specifying a year, month, and day to remove the generator
   #       which generates the matching date
   remove: (generator) ->
-    for fn,index in generators
+    for fn,index in @generators
       if fn is generator
-        generators.splice index, 1
+        @generators.splice index, 1
         return true
 
     # didn't find it, so, return false
     return false
+
+module.exports = -> new Holidays
+exports.Holidays = Holidays
