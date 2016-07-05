@@ -58,7 +58,7 @@ holidays.add(function (year) { // the generator function
       name: 'Independence Day',
       public: true
       // `bank` is only true if it is Mon-Fri, otherwise, the "observed" day is
-      // the bank holiday. it's calculated below in the generator
+      // the bank holiday. it's calculated below
     },
     date: {
       month: mainDate.getMonth()
@@ -125,7 +125,7 @@ var biz = require('@date/business')()
 
 // President's Day is the third Monday in February
 
-// create a reusable `info` object
+// create the `info` object once:
 var info = {
   name: 'President\'s Day',  // display name
   bank: true,                // bank holiday (federal)
@@ -148,8 +148,6 @@ holidays.add(function (year) { // the `generator` function
 // New Year's Day is always January 1st, and, when it's on a weekend then
 // it's observed on the nearby Friday or Monday
 
-// this is how to use the generator instead of
-
 mainInfo = {
   name  : 'New Year\'s Day',  // display name
   bank  : true,               // bank holiday (federal)
@@ -165,7 +163,7 @@ observedInfo = {
 
 holidays.add(function (year) { // the `generator` function
   // generate the date using the `gen` helper
-  var date = gen.third().monday().in().february().of(year)
+  var date = new Date(year, 0, 1)
 
   var holiday = {
     info: info,
@@ -176,10 +174,10 @@ holidays.add(function (year) { // the `generator` function
   }
 
   switch (date.getDay()) {
-    case 0: // move from Sunday to Monday
+    case 0: // move from Sunday to Monday (or next business day)
       biz.nextBusinessDay(date)
       break
-    case 6: // move from Saturday to Friday
+    case 6: // move from Saturday to Friday (or previous business day)
       biz.previousBusinessDay(date)
       break
     default: // default is for weekdays
@@ -188,7 +186,7 @@ holidays.add(function (year) { // the `generator` function
       // case 3: // Wednesday
       // case 4: // Thursday
       // case 5: // Friday
-    return holiday // return only the one holiday
+      return holiday // return only the one holiday
   }
 
   return [ // return both holidays
@@ -216,7 +214,8 @@ Specify a function which accepts a single argument, the year, and returns an obj
 The `info` is used in two places:
 
 1. as the return value of `getHoliday()`
-2. for comparison of extra properties given to `isHoliday()`
+2. for comparison of extra properties given to `isHoliday()` and `getHoliday()`
+
 
 ```javascript
 holidays.add(function (year) {
@@ -249,11 +248,22 @@ holidays.add(function (year) {
 
 Remove a holiday generator.
 
+Note: The function is returned from `add()` as the key to use for `remove()`. That way, when adding a generator using an object instead of a function it will return the generator function it created so it's possible to call `remove()` with it.
+
 ```javascript
 fn = someGeneratorFunction()
 
 holidays.add(fn)
 
+holidays.remove(fn)
+
+// this will return the generated function for the `date` provided
+fn = holidays.add({
+  info: { /* some info */ },
+  date: { month: 3, day: 9 }
+})
+
+// so you can remove it:
 holidays.remove(fn)
 ```
 
@@ -268,14 +278,17 @@ For example, to check if a holiday is a bank holiday do:
 ```javascript
 var date = getSomeDate()
 
-// version 1, provide the date and then the extra comparison properties
+// These calls return true only if the `date` is a holiday with
+// bank=true in its info
+
+// version 1, provide the date and then the extra comparison properties.
 holidays.isHoliday(date, { bank: true })
 
 // version 2, provide the date as a property in with the
 // extra comparison properties
 holidays.isHoliday({ date: date, bank: true })
 
-// version 3, provide the date as the second argument instead
+// version 3, provide the date as the second argument instead.
 // this is currying friendly
 holidays.isHoliday({ bank: true }, date)
 ```
