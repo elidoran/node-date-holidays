@@ -1,6 +1,5 @@
 # @date/holidays
 [![Build Status](https://travis-ci.org/elidoran/node-date-holidays.svg?branch=master)](https://travis-ci.org/elidoran/node-date-holidays)
-[![Dependency Status](https://gemnasium.com/elidoran/node-date-holidays.png)](https://gemnasium.com/elidoran/node-date-holidays)
 [![npm version](https://badge.fury.io/js/%40date%2Fholidays.svg)](http://badge.fury.io/js/%40date%2Fholidays)
 
 Store and compare holiday dates.
