@@ -1,6 +1,7 @@
 # @date/holidays
 [![Build Status](https://travis-ci.org/elidoran/node-date-holidays.svg?branch=master)](https://travis-ci.org/elidoran/node-date-holidays)
 [![npm version](https://badge.fury.io/js/%40date%2Fholidays.svg)](http://badge.fury.io/js/%40date%2Fholidays)
+[![Coverage Status](https://coveralls.io/repos/github/elidoran/node-date-holidays/badge.svg?branch=master)](https://coveralls.io/github/elidoran/node-date-holidays?branch=master)
 
 Store and compare holiday dates.
 
