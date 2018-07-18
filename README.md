@@ -61,7 +61,7 @@ holidays.add(function (year) { // the generator function
       // the bank holiday. it's calculated below
     },
     date: {
-      month: mainDate.getMonth()
+      month: mainDate.getMonth(),
       day  : mainDate.getDate()
     }
   }
@@ -91,9 +91,9 @@ holidays.add(function (year) { // the generator function
       holiday,
       {
         info: { // the `info` for the "observed" holiday
-          name: 'Independence Day (Observed)'
-          public: true
-          bank: true // if it's observed then it's a bank holiday
+          name: 'Independence Day (Observed)',
+          public: true,
+          bank: true, // if it's observed then it's a bank holiday
           observed: true
         },
         date: {
