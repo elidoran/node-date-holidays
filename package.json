@@ -18,7 +18,7 @@
     "clean": "rm -rf lib/*.js",
     "prepublish": "npm run compile",
     "postpublish": "npm run clean",
-    "test": "mocha --compilers coffee:coffee-script/register --reporter spec --bail --check-leaks test/lib"
+    "test": "mocha --require coffee-script/register --reporter spec --bail --check-leaks test/lib/*.coffee"
   },
   "repository": {
     "type": "git",
