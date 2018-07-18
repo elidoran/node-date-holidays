@@ -28,6 +28,7 @@
   "bugs": "http://github.com/elidoran/node-date-holidays/issues",
   "devDependencies": {
     "coffee-script": "^1.12.7",
+    "coveralls": "^3.0.2",
     "istanbul": "^0.4.5",
     "mocha": "^5.2.0"
   },
