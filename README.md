@@ -379,6 +379,16 @@ holidays.purgeYears([2001, 2004, 2008])
 holidays.purgeYearRange(1999, 2018)
 ```
 
+#### Why not do all that in purge() ?
+
+Originally I was, but, I changed my mind because:
+
+1. the function was then more complicated than necessary
+2. it's better to make functions more focused
+3. if performance were important on these functions, accepting different types of arguments would reduce its performance
+4. and, best of all, it's more readable this way
+
+
 ### API: compact()
 
 The `holidays` instance caches calculated holidays by year. When using the *purge* functions it nulls the value and leaves the year property in the cache. Over time this will build up keys without a value.
