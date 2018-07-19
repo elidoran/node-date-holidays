@@ -3,6 +3,9 @@
   "version": "0.3.0",
   "description": "Store and compare holiday dates",
   "main": "lib",
+  "files": [
+    "lib/index.js"
+  ],
   "keywords": [
     "holiday",
     "holidays",
