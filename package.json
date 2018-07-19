@@ -1,6 +1,6 @@
 {
   "name": "@date/holidays",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Store and compare holiday dates",
   "main": "lib",
   "keywords": [
