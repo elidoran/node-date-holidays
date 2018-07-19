@@ -142,51 +142,103 @@ describe 'test holidays', ->
 
       # count how many years we have stored ...
       yearCount = 0
-      yearCount++ for key, value of holidays.holidays when value?
+      yearCount++ for own key, value of holidays.holidays when value?
 
       # purge one of the years
-      holidays.purge 2005
+      holidays.purgeYear 2005
 
       yearRecount = 0
-      yearRecount++ for key, value of holidays.holidays when value?
+      yearRecount++ for own key, value of holidays.holidays when value?
 
       assert.equal yearRecount, (yearCount - 1)
+
+    it 'purgeYear() should not add a property when purging a year which isn\'t already there', ->
+
+      assert !holidays.holidays[1234], 'should not have year 1234'
+
+      # telling it to purge shouldn't have an effect.
+      holidays.purgeYear 1234
+
+      assert !holidays.holidays[1234], 'still should not have year 1234'
 
     it 'should purge each year in arguments', ->
 
       # count how many years we have stored ...
       yearCount = 0
-      yearCount++ for key, value of holidays.holidays when value?
+      yearCount++ for own key, value of holidays.holidays when value?
 
       # purge some years as args
-      holidays.purge 2002, 2006, 2008
+      holidays.purgeYears 2002, 2006, 2008
 
       yearRecount = 0
-      yearRecount++ for key, value of holidays.holidays when value?
+      yearRecount++ for own key, value of holidays.holidays when value?
 
       assert.equal yearRecount, (yearCount - 3)
 
+    it 'purgeYears() should not add a property when purging a year which isn\'t already there', ->
+
+      assert !holidays.holidays[1234], 'should not have year 1234'
+      assert !holidays.holidays[2345], 'should not have year 2345'
+
+      # telling it to purge shouldn't have an effect.
+      holidays.purgeYears 1234, 2345
+
+      assert !holidays.holidays[1234], 'still should not have year 1234'
+      assert !holidays.holidays[2345], 'still should not have year 2345'
 
     it 'should purge each year in specified array', ->
 
       # count how many years we have stored ...
       yearCount = 0
-      yearCount++ for key, value of holidays.holidays when value?
+      yearCount++ for own key, value of holidays.holidays when value?
 
       # purge some years as args
-      holidays.purge [2003, 2007, 2009]
+      holidays.purgeYears [2003, 2007, 2009]
 
       yearRecount = 0
-      yearRecount++ for key, value of holidays.holidays when value?
+      yearRecount++ for own key, value of holidays.holidays when value?
 
       assert.equal yearRecount, (yearCount - 3)
+
+
+    it 'should purge each year within range', ->
+
+      # count how many years we have stored ...
+      yearCount = 0
+      yearCount++ for own key, value of holidays.holidays when value?
+
+      # purge some years as args
+      holidays.purgeYearRange 2001, 2009
+
+      yearRecount = 0
+      yearRecount++ for own key, value of holidays.holidays when value?
+
+      assert.equal yearRecount, 2 # 2000 and 2010 remain.
+
+
+    it 'should eliminate years with undefined values', ->
+
+      # count how many years we have stored ...
+      definedYearsCount = 0
+      nullYearsCount = 0
+      for own key, value of holidays.holidays
+        if value? then definedYearsCount++ else nullYearsCount++
+
+      assert nullYearsCount > 0, 'should have keys with null values'
+
+      # eliminate those with null values
+      holidays.compact()
+
+      count = 0
+      count++ for own key of holidays.holidays
+      assert count is definedYearsCount, 'should only have the years with values left'
 
 
     it 'should purge all stored years', ->
 
       # count how many years we have stored ...
       yearCount = 0
-      yearCount++ for key, value of holidays.holidays when value?
+      yearCount++ for own key, value of holidays.holidays when value?
 
       assert yearCount > 0, 'should have some years left'
 
@@ -194,21 +246,10 @@ describe 'test holidays', ->
       holidays.purge()
 
       yearRecount = 0
-      yearRecount++ for key, value of holidays.holidays when value?
+      yearRecount++ for own key, value of holidays.holidays when value?
 
       assert.equal yearRecount, 0
 
-    it 'should skip purging years which are undefined', ->
-      # avoids adding keys with a null value...
-      holidays.purge(1999)
-      assert holidays.holidays[1999] is undefined, 'the key shouldn\'t be added (A)'
-
-      holidays.purge([1999])
-      assert holidays.holidays[1999] is undefined, 'the key shouldn\'t be added (B)'
-
-      holidays.purge(1998, 1999)
-      assert holidays.holidays[1998] is undefined, 'the key shouldn\'t be added (C)'
-      assert holidays.holidays[1999] is undefined, 'the key shouldn\'t be added (D)'
 
 
   describe 'with variable holiday', ->
