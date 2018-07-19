@@ -341,22 +341,62 @@ returnedInfo = holidays.getHoliday(date, { public: true })
 returnedInfo = holidays.getHoliday(date, { bank: true })
 ```
 
-### API: purge()
+### API: purge functions
 
-The `holidays` instance caches calculated holidays by year. Clear the cache entirely by calling `purge()` or specify an array of years to delete specific years.
+The `holidays` instance caches calculated holidays by year. The purge functions help remove cached holiday info.
+
+When using the *purge* functions it nulls the value and leaves the year property in the cache. Over time this will build up keys without a value. (As opposed to using `delete` on the keys which is undesirable.)
+
+One exception is the `purge()` function. It creates a brand new cache object with no properties.
+
+The purge functions:
+
+1. `purge()` - replaces cache with a new empty one
+2. `purgeYear()` - accepts one argument, a number, and nullifies that year's holidays
+3. `purgeYears()` - accepts multiple arguments, either a number or an array of numbers, and nullifies each year's holidays
+4. `purgeYearRange()` - accepts two arguments, both numbers, as the from/to range (inclusive) to purge
 
 ```javascript
-// delete them all
+// delete them all.
+// Note: creates a new cache object.
 holidays.purge()
 
-// delete one specific year
-holidays.purge(2016)
+// delete one specific year.
+// Note, the `2016` property remains with a null value.
+holidays.purgeYear(2016)
 
-// delete multiple years
-holidays.purge(2001, 2002, 2003)
+// delete multiple years (specified as arguments).
+// Note, the three years remain as properties with a null value.
+holidays.purgeYears(2005, 2012, 2013)
 
-// delete multiple years with an array
-holidays.purge([2001, 2002, 2003])
+// delete multiple years specified with an array.
+// Note, the three years remain as properties with a null value.
+holidays.purgeYears([2001, 2004, 2008])
+
+// delete all years within inclusive range.
+// deletes years 2009 through 2018, including both 2009 and 2018.
+// Note, each year's property remains with a null value.
+holidays.purgeYearRange(1999, 2018)
 ```
+
+### API: compact()
+
+The `holidays` instance caches calculated holidays by year. When using the *purge* functions it nulls the value and leaves the year property in the cache. Over time this will build up keys without a value.
+
+Calling `compact()` will replace the current cache with a new one containing only those years with defined values; eliminating those with null values.
+
+```javascript
+// will cause holidays in 2001 to be generated and cached.
+holidays.isHoliday(2001)
+
+// purge that year and its value will be null.
+holidays.purgeYear(2001)
+
+// do the above many times and there will be lots of keys in the cache with null values.
+
+// eliminate all those keys without values:
+holidays.compact()
+```
+
 
 ## [MIT License](LICENSE)
