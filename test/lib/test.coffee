@@ -446,3 +446,44 @@ describe 'test holidays', ->
       result = holidays.remove generateIndependenceDay
 
       assert.equal result, false
+
+    it 'should allow generator to provide holiday with custom year', ->
+
+      specialGenerator = (year) ->
+
+        return [
+          {
+            info:
+              name: 'In Same Year'
+            date:
+              month: 0
+              day  : 1
+          },
+          {
+            info:
+              name: 'Observed in Previous Year!'
+            date:
+              year : year - 1
+              month: 11
+              day  : 31
+          }
+        ]
+
+      holidays.add specialGenerator
+
+      result = holidays.getHoliday new Date 2000, 0, 1
+
+      assert holidays.holidays[2000], 'should have created year 2000'
+      assert holidays.holidays[2000][0], 'should have created Jan 2000'
+      assert holidays.holidays[2000][0][1], 'should have created Jan 1st of 2000'
+
+      assert.equal result.name, 'In Same Year'
+
+      assert holidays.holidays[1999], 'should have created year 1999 as well'
+      assert holidays.holidays[1999][11], 'should have created December of 1999'
+      assert holidays.holidays[1999][11][31], 'should have created December 31st of 1999 as well'
+
+      assert.equal holidays.holidays[1999][11][31].name, 'Observed in Previous Year!'
+
+      result = holidays.getHoliday new Date 1999, 11, 31
+      assert.deepEqual result, name: 'Observed in Previous Year!'
