@@ -1,4 +1,11 @@
-0.3.0 - 2018/07/19
+### 0.3.1 - 2018/07/20
+
+1. add dep @flatten/array and use it to flatten the array of holidays from generators
+2. allow holiday info to specify the year in case the observed holiday is in a different year (like New Year's ending up in previous year)
+3. add new test for custom year ability
+4. clear cached holidays when a new generator is added
+
+### 0.3.0 - 2018/07/19
 
 1. switch to JavaScript (from CoffeeScript, for `lib/index.js`, tests are still CS)
 1. add 2018 to LICENSE
@@ -16,10 +23,10 @@
 13. added documentation to README for new purge and compact functions.
 
 
-0.2.0 - 2016/06/30
+### 0.2.0 - 2016/06/30
 
 1. fixed export to be a builder function as described in the README
 
-0.1.0 - 2016/06/30
+### 0.1.0 - 2016/06/30
 
 1. initial working version with tests
