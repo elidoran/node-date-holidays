@@ -1,3 +1,7 @@
+### 0.3.2 - 2018/07/20
+
+1. fixed custom additional year by generating all holidays for the custom year (instead of just creating an empty object for the year, because that prevented generating for that year)
+
 ### 0.3.1 - 2018/07/20
 
 1. add dep @flatten/array and use it to flatten the array of holidays from generators
