@@ -2,6 +2,7 @@
 .DS_Store
 coverage
 build/eslint/cache
+node_modules
 
 # Logs
 logs
