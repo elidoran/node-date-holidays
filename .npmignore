@@ -3,6 +3,7 @@
 .git
 .gitignore
 
+.nyc_output/
 build/
 coverage/
 test/
