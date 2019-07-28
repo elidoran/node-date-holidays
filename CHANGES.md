@@ -1,7 +1,7 @@
-### 0.4.0 - 2019/07/26
+### 0.4.0 - 2019/07/28
 
 1. total rewrite with breaking API changes
-2. switch from CS to JS
+2. switch tests from CS to JS
 3. add 2019 to LICENSE
 4. drop node 6, add node 12
 5. start using nyc for test coverage
@@ -14,6 +14,7 @@
 12. multiple ways to specify the date(s) a holiday can be on.
 13. allows info for the main date for a holiday, its observed day (if it has one), and info for the main date when that year has an observed day.
 14. info can be a function which will be run each time `getHoliday()` and `isHoliday()` is run.
+15. add linting via eslint
 
 
 ### 0.3.2 - 2018/07/20
