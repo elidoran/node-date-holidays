@@ -111,8 +111,7 @@ class Holidays {
         const result = is(date, theDay, theMonth, year)
 
         switch (result) {
-          case 0: // *not* a match
-            return null
+          case 0: return null // *not* a match
 
           case 1: return mainInfo()  // is the main holiday
 
@@ -137,7 +136,10 @@ class Holidays {
             m = y[theMonth]
 
             if (m && m[theDay]) {
-              result = m[theDay].result  // extract from `result` property.
+              // extract from `result` property.
+              // NOTE: stored in sub-property so we can store null for
+              //       days which are not the holiday (which is a result).
+              result = m[theDay].result
             }
           }
 
@@ -147,7 +149,9 @@ class Holidays {
             // always cache the result, even when null.
             if (!y) y = cache[year] = {}         // eslint-disable-line curly
             if (!m) m = y[theMonth] = {}         // eslint-disable-line curly
-            m[theDay] = { result } // store result inside its own object.
+            // NOTE: stored in sub-property so we can store null for
+            //       days which are not the holiday (which is a result).
+            m[theDay] = { result }
           }
 
           return result
@@ -159,7 +163,7 @@ class Holidays {
         fn = cachingDecoratedIs
       }
 
-      else {
+      else { // non-caching so just use `decoratedIs`.
         fn = decoratedIs
       }
 
@@ -172,7 +176,6 @@ class Holidays {
     // else, we build our own tester function based on the simple date.
     else if (options.month && options.day) {
       const info = this.asFn(options.mainInfo || {})
-      const { month, day } = options
 
       const simpleIs = function() {
         // NOTE: to get here it must be the matching `month` and `day`.
@@ -181,7 +184,9 @@ class Holidays {
 
       // store our simple test function in the simple date range.
       fn = simpleIs
-      range = [[month, day]]
+      range = [
+        [ options.month, options.day]
+      ]
     }
 
     else {
@@ -199,6 +204,7 @@ class Holidays {
     return ('function' === typeof fnOrObject) ? fnOrObject : () => { return fnOrObject }
   }
 
+  // NOTE: used to both add and remove a holiday by specifying `op`.
   // store the function in each day in the inclusive range.
   // range is an array of arrays.
   // each element contains an array with 2 or 3 elements.
@@ -244,6 +250,10 @@ class Holidays {
   purge() {
     // functions are stored in an object hierarchy:
     //  1. year; 2. month; 3. day; 4. then an array of functions
+    // NOTE:
+    //   Object.values() returns each key's value, skipping over the keys.
+    //   so, the first one we skip years and get the months.
+    //   the second one skips days and gets their array of functions.
     for (const month of Object.values(this._fns)) {
       for (const day of Object.values(month)) {
         for (const fn of day) {
@@ -257,6 +267,8 @@ class Holidays {
 
 } // end of class Holidays
 
+// used in _store() to create a remover function by
+// binding this function as the `op` argument.
 function removeFromArray(element) {
   const index = this.indexOf(element)
 
