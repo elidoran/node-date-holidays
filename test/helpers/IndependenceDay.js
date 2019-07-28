@@ -30,8 +30,6 @@ module.exports = {
   //   3. the observed holiday (always a business day)
   is: function isIndependenceDay(date, day, month) {
 
-    if (month !== 6) return 0
-
     const weekday = date.getDay()
 
     // return:
