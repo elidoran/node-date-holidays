@@ -3,409 +3,601 @@
 [![npm version](https://badge.fury.io/js/%40date%2Fholidays.svg)](http://badge.fury.io/js/%40date%2Fholidays)
 [![Coverage Status](https://coveralls.io/repos/github/elidoran/node-date-holidays/badge.svg?branch=master)](https://coveralls.io/github/elidoran/node-date-holidays?branch=master)
 
-Store and compare holiday dates.
+Test if dates are holidays and manage info related to the holidays.
+
+Note, version 0.4.0 changed the API due to a complete rewrite. Use the old API by installing the latest patch version of 0.3.
+
 
 ## Install
 
 ```sh
-npm install @date/holidays --save
+npm install --save @date/holidays
 ```
 
 ## Usage: Add Simple Holiday
 
-Some holidays are always on the same date so are easy to calculate.
+Some holidays are always on the same date so are easy to specify.
 
 ```javascript
-var Holidays = require('@date/holidays')
-var holidays = Holidays()
-// all in one: var holidays = require('@date/holidays')()
+const Holidays = require('@date/holidays')
+const holidays = Holidays()
+// all in one: const holidays = require('@date/holidays')()
 
 // at this point `holidays` is empty so all calls to isHoliday() return false.
 
-// Alternate method for fixed dates which don't need a calculating function,
-// just add the object the a generating function would return:
-holidays.add({
-  info: {
-    name: 'Valentine\'s Day'
-    public: true
+// simplest method for fixed dates only requires the month and day.
+const removerFn = holidays.add({
+  mainInfo: {
+    name: 'Valentine\'s Day',
+    public: true,
   },
-  date: { // provide both the month and day
-    month: 1  // NOTE: I prefer using months as 1-12, but, Date uses 0-11
-    day  : 14
-  }
+  // provide both the month and day
+  month: 1,  // NOTE: I prefer using months as 1-12, but, Date uses 0-11
+  day  : 14,
 })
+
+// You can remove the holiday from the holidays instance by calling its remover.
+// it will remove the function and its cache (if it's a caching holiday).
+removerFn()
 ```
 
 ### Usage: Add Complicated Holiday
 
 Some holidays require calculating when they occur, and, whether they have an "observed" date as well.
 
-Do all the work in the generator function.
+Specify the range of dates the holiday can occur on and an `is(<Date>)` function to test whether a `Date` is the holiday.
 
 ```javascript
-
-// NOTE: This holiday is available in `@date/holidays-us`, but, I'm creating
-// them here to show how to add your own holiday dates to a `holidays` instance.
-
+// this holiday is available as: @date/IndependenceDay
 // Independence Day is always on July 4th
 // It has an "observed" holiday on the nearest weekday if it's on the weekend
-holidays.add(function (year) { // the generator function
-  // the main holiday is always the same date: July 4th
-  var mainDate = new Date(year, 6, 4) // July is '6' for Date's Months 0-11
+holidays.add({
+  // first way to specify the holiday's date range.
+  month: 6, // July is 6 cuz Date uses 0-11
+  firstDay: 3,
+  lastDay: 5,
 
-  var holiday = {
-    info: {
-      name: 'Independence Day',
-      public: true
-      // `bank` is only true if it is Mon-Fri, otherwise, the "observed" day is
-      // the bank holiday. it's calculated below
-    },
-    date: {
-      month: mainDate.getMonth(),
-      day  : mainDate.getDate()
+  // // second way allows specifying multiple date ranges (as for New Year's Day)
+  // dateRange: [ // each element is an array with a range or individual date.
+  //   // this means July 3rd through July 5th.
+  //   [ 6, 3, 5 ]
+  //
+  //   // an individual day would be:
+  //   // [ 11, 31 ] // for December 31st (not relevant for Independence Day)
+  // ],
+
+  mainInfo: { // optional holiday info; defaults to {}
+    name: 'Independence Day',
+    public: true, // it's a public holiday in USA
+    bank: true, // it's a bank holiday in USA when it's on a weekday.
+  },
+
+  observedInfo: { // optional info for the observed days; defaults to `mainInfo`.
+    name: 'Independence Day (observed)',
+    public: true,
+    bank: true, // the observed date is always a bank holiday.
+  },
+
+  mainInfoWhenObserved: { // optional info when main date is on a weekend; defaults to `mainInfo`.
+    name: 'Independence Day',
+    public: true,
+    bank: false, // when it's on the weekend it's not a bank holiday (the observed is)
+  },
+
+  // `date` is the `Date` instance.
+  // the other args are taken from the Date instance and used multiple times
+  // so they are provided as a convenience so you don't have to call those
+  // getters again.
+  // `year` is the "full year" 4-digits.
+  is: function isIndependenceDay(date, day, month, year) {
+
+    // get the weekday so we can see if it's the main, observed, or neither.
+    const weekday = date.getDay()
+
+    // return:
+    //  0 - not a match
+    //  1 - is the main holiday on a business day
+    //  2 - is the observed holiday on a business day
+    //  3 - is the main holiday on a weekend day
+    switch(day) {
+      // 3 for July 3rd which is the observed holiday when it's a Friday
+      case 3: return (weekday === 5) ? 2 : 0  // Friday July 3rd is "observed"
+
+      // 4 for July 4th, always a holiday, but is either main, or "main when observed"
+      case 4: return (1 <= weekday && weekday <= 5) ? 1 : 3
+
+      // 5 for July 5th which is the observed holiday when it's a Monday
+      case 5: return (weekday === 1) ? 2 : 0  // Monday July 5th is "observed"
+
+      // otherwise, not a match for the holiday.
+      default: return 0
+    }
+  },
+})
+
+// New Year's spans multiple months and multiple years because
+// it can be observed on the day before which is December 31st.
+// we support this with the `dateRange` property.
+holidays.add({
+  // all three "info" objects are optional.
+  dateRange: [
+    [ 12, 31 ], // specific day: December 31st
+    [ 0, 1, 2 ] // range of days: January 1st to 2nd
+  ],
+  is: (date, day, month) => {
+    // Holidays ensures the date we receive is within the range we specified.
+    // so, we need to look at the day of week to determine our result.
+    const weekday = date.getDay()
+
+    switch(day) {
+      case 31: // only the observed holiday if it's a Friday
+        return (weekday === 5) ? 2 : 0
+
+      case 1: // always main holiday date, might be on weekend/weekday
+        return (1 <= weekday && weekday <= 5) ? 1 : 3
+
+      case 2: // only the observed holiday if it's a Monday
+        return (weekday === 1) ? 2 : 0
+
+      default: // otherwise, not a match
+        return 0
     }
   }
+})
 
-  // get the day of the week so we can determine if we should make an
-  // observed holiday
-  var day = mainDate.getDay()
+// a date may not have a set number which requires more processing.
+holidays.add({
+  mainInfo: {
+    name: 'Father\'s Day',
+  },
 
-  // by default the holiday is on July 4th, no change
-  var observed = 0
+  // it's the third Sunday in June.
+  // so, month is 5 cuz Date uses 0-11,
+  // and, the days it could be on are June 15th to 21st.
+  dateRange: [
+    [ 5, 15, 21 ]
+  ],
 
-  // if day is Sunday then add 1 day for "observed" holiday on Monday
-  if (day === 0) observed = 1
-
-  // if day is Saturday then subtract 1 day for "observed" holiday on Friday
-  else if (day === 6) observed = -1
-
-  // else the main holiday is the only holiday, no "observed" holiday,
-  // and it's a bank holiday
-  else holiday.info.bank = true
-
-  // set the observed info into the
-  // change the date from the 4th using the value of `observed`
-  if (observed !== 0) {
-    // array of holidays
-    return [
-      holiday,
-      {
-        info: { // the `info` for the "observed" holiday
-          name: 'Independence Day (Observed)',
-          public: true,
-          bank: true, // if it's observed then it's a bank holiday
-          observed: true
-        },
-        date: {
-          month: 6,
-          day  : 4 + observed
-        }
-      }
-    ]
-  }
-
-  else {
-    // no array, just the one holiday
-    return holiday
-  }
+  is: function isFathersDay(date, day, month, year) {
+    // Holidays ensures it's within the date range we specified.
+    // so, is it a Sunday?
+    return (date.getDay() === 0) ? 1 : 0
+  },
 })
 ```
 
 ### Usage: Helpers
 
-Use `@date/generator` and `@date/business` to help create the functions which calculate the dates.
+When working with dates [@date/generator](https://github.com/elidoran/node-date-generator) and [@date/business](https://github.com/elidoran/node-date-business) help.
 
-```javascript
-// add some holidays using @date/generator:
-var gen = require('@date/generator')
-var biz = require('@date/business')()
+The individual holidays I'm publishing will all have a `gen(year)` function which returns a `Date` instance for that holiday in the specified year. It may also have an `observed` property set on it with the `Date` that holiday is "observed" in that year. This is what was used in the previous version of `@date/holidays`. The `@date/generator` package is helpful for that.
 
-// NOTE: these holidays are available in `@date/holidays-us`, but, I'm gen'ing
-// them here to show how to add your own holiday dates to a `holidays` instance.
+The `@date/business` package is helpful for changing a date to the next or previous business day. It accepts a `Holidays` instance so it will skip over holiday dates.
 
-// President's Day is the third Monday in February
-
-// create the `info` object once:
-var info = {
-  name: 'President\'s Day',  // display name
-  bank: true,                // bank holiday (federal)
-  public: true               // a 'public' holiday in USA
-}
-
-holidays.add(function (year) { // the `generator` function
-  // generate the date using the `gen` helper
-  var date = gen.third().monday().in().february().of(year)
-
-  return {
-    info: info,
-    date: { // get date info from our generated `date` instance
-      month: date.getMonth(),
-      day  : date.getDate()
-    }
-  }
-})
-
-// New Year's Day is always January 1st, and, when it's on a weekend then
-// it's observed on the nearby Friday or Monday
-
-mainInfo = {
-  name  : 'New Year\'s Day',  // display name
-  bank  : true,               // bank holiday (federal)
-  public: true               // a 'public' holiday in USA
-}
-
-observedInfo = {
-  name    : 'New Year\'s Day (Observed)', // display name
-  bank    : true,                         // bank holiday (federal)
-  public  : true,                         // a 'public' holiday in USA
-  observed: true
-}
-
-holidays.add(function (year) { // the `generator` function
-  // generate the date using the `gen` helper
-  var date = new Date(year, 0, 1)
-
-  var holiday = {
-    info: info,
-    date: { // get date info from our generated `date` instance
-      month: date.getMonth()
-      day  : date.getDate()
-    }
-  }
-
-  switch (date.getDay()) {
-    case 0: // move from Sunday to Monday (or next business day)
-      biz.nextBusinessDay(date)
-      break
-    case 6: // move from Saturday to Friday (or previous business day)
-      biz.previousBusinessDay(date)
-      break
-    default: // default is for weekdays
-      // case 1: // Monday
-      // case 2: // Tuesday
-      // case 3: // Wednesday
-      // case 4: // Thursday
-      // case 5: // Friday
-      return holiday // return only the one holiday
-  }
-
-  return [ // return both holidays
-    holiday,
-    {
-      info: observedInfo,
-      date: {
-        month: date.getMonth(),
-        day  : date.getDate()
-      }
-    }
-  ]
-
-})
-```
 
 ## API
-
-### API: add()
-
-Adds a holiday to the `holidays` instance.
-
-There are two ways to add a holiday, one for a simple fixed date holiday and one for a holiday which requires calculating its date.
-
-For a simple fixed date you can specify an object with the `info` and `date` properties and the `add()` function will create the generator function. It will return that function so it can be stored and used with the `remove()` function to remove it.
-
-For a calculated date, specify a function which accepts a single argument, the year, and returns an object containing the `info` and the `date` of the holiday, or, an array of those objects for multiple holidays.
-
-It's acceptable to calculate many holidays in one generator function and return them all in an array. See the [@date/holidays-us](https://github.com/elidoran/node-date-holidays-us/blob/853e88ba8cbf978643b55109070b4a856e85a5e0/lib/index.coffee#L133) for an example.
-
-The `info` is used in two places:
-
-1. as the return value of `getHoliday()`
-2. for comparison of extra properties given to `isHoliday()` and `getHoliday()` as "filters"
-
-
-```javascript
-holidays.add(function (year) {
-  // do some work to figure out when the holiday is (or holidays)
-
-  // for one holiday return an object containing `info` and `date` like:
-  return {
-    info: { // all values in `info` are optional, here are some examples:
-      name: 'Holiday Name' // name the holiday
-      public: true         // mark it as a public holiday
-      bank  : true         // mark it as a bank holiday
-    },
-    date: {
-      month: 0, // the month 0-11 because Date uses 0-11
-      day  : 1  // day of the month, think date.getDate()
-    }
-  }
-
-  // for two or more holidays return an array containing objects
-  // like the one above
-  return [
-    // { ... },
-    // { ... }
-  ]
-})
-```
-
-
-### API: remove()
-
-Remove a holiday generator.
-
-Specify a previously added generator function and it will be removed.
-
-Note, any holidays already generated by the generator will still be in the cache. You must purge them if they are no longer wanted.
-
-Note, when adding a fixed date using an object, instead of a function, the function created is returned from `add()` as the key to use for `remove()`.
-
-```javascript
-fn = someGeneratorFunction()
-
-holidays.add(fn)
-
-holidays.remove(fn)
-
-// this will return the generated function for the `date` provided
-fn = holidays.add({
-  info: { /* some info */ },
-  date: { month: 3, day: 9 }
-})
-
-// so you can remove it:
-holidays.remove(fn)
-```
 
 ### API: isHoliday()
 
 Returns false unless it is aware of a holiday on the specified date.
 
-Note, all holiday generators will be called to create holidays for the year of the specified `Date` argument.
-
 Extra criteria can be specified and the holiday's `info` will be tested for those values. All specified values must exist in the `info` for it to return true.
 
-For example, to check if a holiday is a bank holiday do:
-
 ```javascript
-var date = getSomeDate()
+const date = getSomeDate() // a `Date` object
 
-// These calls return true only if the `date` is a holiday with
-// bank=true in its info.
+// test the date without filters, returns true/false
+holidays.isHoliday(date)
 
-// version 1, provide the date and then the extra comparison properties.
-holidays.isHoliday(date, { bank: true })
+// test the date with a single filter, returns true/false
+holidays.isHoliday(date, { some: 'thing' })
 
-// version 2, provide the date as a property in with the
-// extra comparison properties.
-holidays.isHoliday({ date: date, bank: true })
-
-// version 3, provide the date as the second argument instead.
-// this is currying friendly.
-holidays.isHoliday({ bank: true }, date)
+// now with two filters:
+holidays.isHoliday(date, { some: 'thing', something: 'else' })
 ```
 
 ### API: getHoliday()
 
-Retrieve the holiday's `info` set into the `holidays` instance.
+Get an array of holiday "info" for all holidays on a specific date.
+
+If there are no holidays on the date then an empty array is returned.
+
+The "info" is an optional object provided when calling `holidays.add()`.
+
+See [API: add()](#api-add)
 
 ```javascript
-// add a holiday, I'll use New Year's, but, I won't add handling of the
-// "observed" New Year's
-var specifiedInfo = {
-  name: 'New Year\'s Day',
-  public: true
+infos = holidays.getHoliday(date)
+
+if (infos.length > 1) {
+  // then there was at least one holiday on that date.
 }
 
+// you can filter the results by supplying properties to check for in the "info".
+infos = holidays.getHoliday(date, {
+  some: 'prop',
+  to: 'filter',
+})
+```
+
+
+### API: load() and loadMany()
+
+Load a published holiday package into a `Holidays` instance.
+
+May override default options for the holiday by providing an object as the second argument. It may contain any properties used in [add()](). The default options and the specified options will be combined.
+
+For convenience, `loadMany()` accepts an array of arrays. Each sub-array should have the package name as the first element and an optional options override object as the second element.
+
+Look for published holidays in [@date](https://www.npmjs.com/org/date) organization.
+
+```javascript
+// one-line require and build:
+const holidays = require('@date/holidays')()
+
+// load a single holiday package without overriding any options.
+holidays.load('the-package-name')
+
+// load a single holiday with some option overrides:
+holidays.load('some-package-name', {
+  // specify any properties used in holidays.add()
+})
+
+// to do the above for many packages at once:
+holidays.loadMany([ // NOTE: argument is an array of sub-arrays.
+  // sub-arrays may have only the package name:
+  [ 'package-name' ],
+
+  // or, they may also have an options override object:
+  [ 'some-name', { name: 'Changed Holiday Name', cache: true }]
+])
+```
+
+
+### API: add(Object)
+
+Adds a holiday to the `holidays` instance for `getHoliday()` and `isHoliday()`.
+
+Add accepts a single object argument containing the options for the holiday. The possible options are:
+
+property | purpose
+--------+|+------------------------------
+mainInfo | An optional object returned from `getHoliday()` and used when filtering results. May be a function which will then be called each time `getHoliday()` and `isHoliday()` is called and the holiday is a match on that date. This allows returning a fresh object each time. This is also the default "info" when either of the other 2 "info" properties is not specified. Defaults to an empty object. If "mainInfoWhenObserved" is specified as well then this one will only be used for a year when there is **not** an "observed date".
+observedInfo | Same as `mainInfo` except it's returned when the date is for the "observed date" of the holiday. Defaults to `mainInfo` if not specified.
+mainInfoWhenObserved | same as `mainInfo` except it's returned when the date is the "main date" of the holiday but is on a weekend so the holiday is "observed" on another date. Defaults to `mainInfo` if not specified.
+month | The month of the holiday. Uses 0-11 as JavaScript `Date` does.
+day | The day of the month of the holiday. Uses 1-31. Used for a "fixed date" holiday which is always on the same date.
+firstDay | The first day in a range of dates the holiday may be on. Used with `lastDay`. For holidays which may be on different dates and ones with possible "observed" dates (usually before or after the "main date").
+lastDay | The last day in a range of dates the holiday may be on. Used with `firstDay`.
+dateRange | Provide multiple date ranges for a holiday which has a range spanning more than one month or year. For example, New Year's may be observed on December 31st which is both the previous month and previous year. An array of sub-arrays with each sub-array containing 2 elements: the month and the day, or 3 elements: the month, firstDay, and lastDay.
+is | the test function which specifies whether a specific date is: 1. the "main date" without an "observed date" that year; 2. the "observed date"; 3. the "main date" with an "observed date" that year. Its arguments are `is(date, day, month, year)`. The later args are there for convenience because `Holidays` has already called the functions on the `date` to get those values for itself.
+cache | Defaults to `false`. When set to `true` results of calling the `is()` will be cached in an object by year/month/day. Call `holidays.purge()` to replace all holiday cache objects with new empty objects.
+
+Read later sections about specific options. Below, let's look at them all together:
+
+```javascript
+// the simplest holiday on a fixed date of March 3rd without info.
+// the `mainInfo` will default to an empty object.
+// an `is()` function will be created for it.
 holidays.add({
-  info: specifiedInfo,
-  date: {
-    month: 0,
-    day  : 1
+  month: 2,
+  day: 3,
+})
+
+// now returns true for any year:
+holidays.isHoliday(new Date(2000, 2, 3))
+
+// result is always an array containing holiday info's for the Date.
+// in this instance, it has one element which is the default empty object.
+result = holidays.getHoliday(new Date(2000, 2, 3))
+
+if (result.length > 0) {
+  // then there was at least one holiday info returned...
+}
+
+// add some info to the date to use elsewhere, or,
+// use the info to filter results.
+holidays.add({
+  mainInfo: {
+    name: 'Some Holiday',
+    some: 'property',
+  },
+  month: 2,
+  day: 3,
+})
+
+// to filter, specify the properties you want the holiday to have.
+// this will return `true` because the property exists in `mainInfo`.
+holidays.isHoliday(new Date(2000, 2, 3), { some: 'property' })
+
+// can specify more than one property and both must exist and match.
+holidays.isHoliday(new Date(2000, 2, 3), {
+  name: 'Some Holiday',
+  some: 'property',
+})
+
+// these both will return false.
+holidays.isHoliday(new Date(2000, 2, 3), { some: 'thing else' })
+holidays.isHoliday(new Date(2000, 2, 3), { another: 'property' })
+
+
+// for holidays which can be on different dates or have observed dates
+// then an `is()` function is necessary.
+holidays.add({
+  // these holidays can have different "info" for:
+  //  1. the main date
+  //  2. the observed date
+  //  3. the main date when it's on a weekend, meaning there's an observed date.
+  // for example, setting a property like { bank: true } for a bank holiday.
+  // it'll only be true on the main date if it's a weekday.
+  // it'll always be true for the observed date.
+  // they can all be used for filtering as described above.
+  // the three properties for them are:
+  mainInfo: {},
+  observedInfo: {},
+  mainInfoWhenObserved: {},
+
+  // method #1 of specifying a date range:
+  // this is an array of arrays.
+  // each sub-array must have either 2 or 3 elements.
+  // 2 elements means it's specific date with the month then day.
+  // 3 elements means it's a range of days with the month, first day, and last day.
+  dateRange: [
+    // many holidays are one a set date and may have an observed date
+    // a day before or a day after it. So, a range of 3 days.
+    // can be in month 1 between the 2nd and 4th:
+    [ 1, 2, 4 ]
+  ],
+
+  // method #2 of specifying a date range:
+  // for date ranges with only a single range it can instead be specified like this:
+  month: 1,
+  firstDay: 2,
+  lastDay: 4,
+
+  // this is called to check a Date.
+  is: (date, day, month, year) {
+    // must return:
+    //  0 - not a match
+    //  1 - is the main holiday on a business day
+    //  2 - is the observed holiday on a business day
+    //  3 - is the main holiday on a weekend day
+
+    // get the weekday so we can see if it's the main, observed, or neither.
+    const weekday = date.getDay()
+
+    // check each day in the date range you specified.
+    // based on the weekday you can determine whether it's main/observed/main-when-observed.
+    switch(day) {
+      // 2 for February 2nd which is the observed holiday when it's a Friday
+      case 2: return (weekday === 5) ? 2 : 0  // Friday February 2nd is "observed"
+
+      // 3 for February 3rd, always a holiday, but is either main, or "main when observed"
+      case 3: return (1 <= weekday && weekday <= 5) ? 1 : 3
+
+      // 4 for February 4th which is the observed holiday when it's a Monday
+      case 4: return (weekday === 1) ? 2 : 0  // Monday July 5th is "observed"
+
+      // otherwise, not a match for the holiday.
+      default: return 0
+    }
+  },
+})
+
+// by default, no caching is done. The `is()` function will be called each time.
+// some holiday dates are complicated to calculate (example: Easter).
+// it may be helpful to cache the results to avoid calling `is()` repeatedly.
+// to do that, simply specify the `cache` property set to `true`.
+holidays.add({
+  cache: true,
+  // ... the usual stuff here.
+})
+
+// To clear the cache of all caching holidays in a Holidays instance,
+// call `purge()`.
+holidays.purge()
+```
+
+
+#### API: add() - info trio
+
+The `info` is used in two places:
+
+1. as the return value of `getHoliday()`
+2. for comparison of extra properties given to `isHoliday()` and `getHoliday()` as "filters" (second argument).
+
+All "info" objects are optional.
+
+If `mainInfo` isn't provided then it defaults to an empty object.
+
+Both `observedInfo` and `mainInfoWhenObserved` default to the value of `mainInfo` (which defaults to an empty object).
+
+If the holiday is always on the same date then only `mainInfo` will be used (I refer to those as "simple fixed date" holidays).
+
+If the holiday may be "observed" on another date, usually one day before or one day after the "main date", then that "observed date" will return the `observedInfo` object.
+
+When there is an "observed date" in the year of the `Date` provided to `getHoliday()` or `isHoliday()` then the "main date" is on the weekend and it will return the `mainInfoWhenObserved` object.
+
+For example, Valentine's Day is always February 14th and never has an observed date. So, only a `mainInfo` is useful.
+
+For example, Independence Day's "main date" is always July 4th. It may be observed on July 3rd or July 5th. When July 4th is a weekday (Monday - Friday) then the `mainInfo` will be used for July 4th that year. If July 4th is on the weekend then `mainInfoWhenObserved` will be used for July 4th that year. When a year observes the holiday on the 3rd or 5th then the `observedInfo` will be used (otherwise, those days are not considered holidays).
+
+How is this helpful? Consider the above example about Independence Day. It makes sense to have the `mainInfo` contain `bank: true` because it's a bank holiday. However, when the holiday is observed on the 3rd or 5th then the 4th is *not* a bank holiday. So, that's when `mainInfoWhenObserved` is helpful because it can contain `bank: false`. The `observedInfo` would contain `bank: true` because the "observed date" (in years where it occurs) is always a bank holiday.
+
+
+#### API: add() -  methods to specify dates
+
+Holidays have varied date configurations. So, `Holidays` allows specifying them in different ways.
+
+1. simple fixed date
+
+Always on the same date without an "observed date". For example, Valentine's Day. Specify one like this:
+
+```js
+holidays.add({
+  // February 14th
+  month: 1,
+  day: 14,
+})
+```
+
+2. fixed date with possible observed dates
+
+The "main date" is always on the same date and it may have an "observed date" one day before, or after, the "main date". For example, Independence Day is always on July 4th but may be observed on July 3rd or July 4th. Specify one like this:
+
+```js
+// method 1: properties
+// Independence Day: remember, 6 is July for JS Dates 0-11
+holidays.add({
+  month: 6,
+  firstDay: 3,
+  lastDay: 5,
+})
+
+
+// method 2: date range
+holidays.add({
+  dateRange: [
+    // [ month, firstDay, lastDay ]
+    // Independence Day:   (remember, 6 is July for JS Dates 0-11)
+    [ 6, 3, 5 ],
+  ],
+})
+
+// New Year's may span 2 months and 2 years when it's
+// observed the day before, which is December 31st.
+// here's how that would be specified:
+holidays.add({
+  dateRange: [
+    // the possible observed date of December 31st:
+    [ 11, 31 ],
+    // the range covering the "main date" and possible observed Date:
+    // January 1st to January 2nd:
+    [ 0, 1, 2 ],
+  ],
+})
+```
+
+3. variable date
+
+The holiday date must be calculated for each year. One example is Father's Day which is always on the third Sunday in June. Another example is Easter which has a complicated calculation algorithm.
+
+```js
+// Father's day spans a week of possible dates:
+// method 1: properties
+holidays.add({
+  month: 5, // NOTE: 5 is June for JS Dates 0-11
+  firstDay: 15, // earliest date it could be on.
+  lastDay: 21,  // latest date it could be on.
+})
+
+// method 2: date range array
+holidays.add({
+  dateRange: [
+    // 5 is June for JS Dates 0-11
+    // 15 - earliest date it could be on.
+    // 21 - latest date it could be on.
+    [ 5, 15, 21 ],
+  ],
+})
+```
+
+#### API: add() - is()
+
+The `is()` function returns a value in the range of zero to three for the specified date. The values mean:
+
+value | meaning
+-----+|+-----------
+0 | not a match for the holiday.
+1 | is the "main date" of the holiday in a year **without** an "observed date".
+2 | is the "observed date" of the holiday for that year.
+3 | is the "main date" of the holiday in a year **with** an "observed date".
+
+The `is()` function is optional for "simple fixed dates". The date info may be specified (see section above) and an `is()` function will be created for it.
+
+The arguments are `(date, day, month, year)`. The first argument is the `Date` object. The later arguments are for convenience so you don't have to call functions on the `Date` to get them (the `Holidays` already calls them for itself so it provides them to `is()`).
+
+For example:
+
+```js
+// a simple fixed date doesn't need an is().
+// it'll be auto-created.
+holidays.add({
+  month: 1,
+  day: 2,
+})
+
+// a "fixed date" holiday with a possible "observed date":
+holidays.add({
+  month: 6,
+  firstDay: 3,
+  lastDay: 5,
+  is: (date, day, month, year) => {
+    // this will only be called for dates within the date range specified.
+    // so, at this point, we already know the month is `6`,
+    // and the day is within the range 3 to 5.
+    // so, use the `day` and the "day of the week" to determine return result:
+    const weekday = date.getDay()
+
+    switch(day) { // based on the day of the month for the date:
+      // 3 for July 3rd which is the observed holiday when it's a Friday
+      case 3: return (weekday === 5) ? 2 : 0  // Friday July 3rd is "observed"
+
+      // 4 for July 4th, always a holiday, but is either main, or "main when observed"
+      case 4: return (1 <= weekday && weekday <= 5) ? 1 : 3
+
+      // 5 for July 5th which is the observed holiday when it's a Monday
+      case 5: return (weekday === 1) ? 2 : 0  // Monday July 5th is "observed"
+
+      // otherwise, not a match for the holiday.
+      default: return 0
+    }
   }
 })
 
-var date = new Date(2016, 0, 1) // New Year's Day, a Friday
-
-var returnedInfo = holidays.getHoliday(date)
-
-// the `returnedInfo` object equals the `specifiedInfo` provided to add()
-
-// extra comparison options can be specified just like to isHoliday()
-
-// this gets the same info as above because the holiday has `public = true`
-returnedInfo = holidays.getHoliday(date, { public: true })
-
-// this gets `false` as a result instead because the holiday
-// doesn't have `bank = true` in its info
-returnedInfo = holidays.getHoliday(date, { bank: true })
+// a variable date holiday:
+holidays.add({ // Father's day is third Sunday in June
+  dateRange: [
+    [ 5, 15, 21 ],
+  ],
+  is: (date, day, month, year) => {
+    // this will only be called for dates within the date range specified.
+    // so, at this point, we already know the month is `5`,
+    // and the day is within the range 15 to 21.
+    // so, all we care about is whether it's Sunday.
+    const weekday = date.getDay()
+    return (weekday === 0) ? 1 : 0
+  }
+})
 ```
 
-### API: purge functions
 
-The `holidays` instance caches calculated holidays by year. The purge functions help remove cached holiday info.
+### API: remove a holiday
 
-When using the *purge* functions it nulls the value and leaves the year property in the cache. Over time this will build up keys without a value. (As opposed to using `delete` on the keys which is undesirable.)
+Removes a holiday from a `Holidays` instance.
 
-One exception is the `purge()` function. It creates a brand new cache object with no properties.
-
-The purge functions:
-
-1. `purge()` - replaces cache with a new empty one
-2. `purgeYear()` - accepts one argument, a number, and nullifies that year's holidays
-3. `purgeYears()` - accepts multiple arguments, either a number or an array of numbers, and nullifies each year's holidays
-4. `purgeYearRange()` - accepts two arguments, both numbers, as the from/to range (inclusive) to purge
+The `Holidays.add()` function returns a "remover function" which, when called, will remove the added holiday.
 
 ```javascript
-// delete them all.
-// Note: creates a new cache object.
+const someHolidaySpecification = getIt()
+
+const removerFn = holidays.add(someHolidaySpecification)
+
+removerFn()
+```
+
+
+### API: purge()
+
+When `cache:true` is specified in a holiday's options it will cache its results to avoid calling its `is()` function.
+
+Each caching holiday creates its own cache object.
+
+Calling `purge()` on the `Holidays` instance will replace all cache objects with new empty objects.
+
+```javascript
+// creates all new empty caches.
 holidays.purge()
-
-// delete one specific year.
-// Note, the `2016` property remains with a null value.
-holidays.purgeYear(2016)
-
-// delete multiple years (specified as arguments).
-// Note, the three years remain as properties with a null value.
-holidays.purgeYears(2005, 2012, 2013)
-
-// delete multiple years specified with an array.
-// Note, the three years remain as properties with a null value.
-holidays.purgeYears([2001, 2004, 2008])
-
-// delete all years within inclusive range.
-// deletes years 2009 through 2018, including both 2009 and 2018.
-// Note, each year's property remains with a null value.
-holidays.purgeYearRange(1999, 2018)
-```
-
-#### Why not do all that in purge() ?
-
-Originally I was, but, I changed my mind because:
-
-1. the function was then more complicated than necessary
-2. it's better to make functions more focused
-3. if performance were important on these functions, accepting different types of arguments would reduce its performance
-4. and, best of all, it's more readable this way
-
-
-### API: compact()
-
-The `holidays` instance caches calculated holidays by year. When using the *purge* functions it nulls the value and leaves the year property in the cache. Over time this will build up keys without a value.
-
-Calling `compact()` will replace the current cache with a new one containing only those years with defined values; eliminating those with null values.
-
-```javascript
-// will cause holidays in 2001 to be generated and cached.
-holidays.isHoliday(2001)
-
-// purge that year and its value will be null.
-holidays.purgeYear(2001)
-
-// do the above many times and there will be lots of keys in the cache with null values.
-
-// eliminate all those keys without values:
-holidays.compact()
 ```
 
 
