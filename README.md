@@ -66,19 +66,29 @@ holidays.add({
   //   // [ 11, 31 ] // for December 31st (not relevant for Independence Day)
   // ],
 
-  mainInfo: { // optional holiday info; defaults to {}
+  // optional holiday info.
+  // defaults to {}.
+  // may be function returning an object.
+  mainInfo: {
     name: 'Independence Day',
     public: true, // it's a public holiday in USA
     bank: true, // it's a bank holiday in USA when it's on a weekday.
   },
 
-  observedInfo: { // optional info for the observed days; defaults to `mainInfo`.
+  // optional info for the observed days.
+  // defaults to `mainInfo`.
+  // may be a function returning an object.
+  observedInfo: {
     name: 'Independence Day (observed)',
     public: true,
     bank: true, // the observed date is always a bank holiday.
   },
 
-  mainInfoWhenObserved: { // optional info when main date is on a weekend; defaults to `mainInfo`.
+  // optional info when main date is on a weekend.
+  // defaults to `mainInfo`.
+  // may be a function returning an object.
+  mainInfoWhenObserved: {
+
     name: 'Independence Day',
     public: true,
     bank: false, // when it's on the weekend it's not a bank holiday (the observed is)
