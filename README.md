@@ -265,13 +265,13 @@ Add accepts a single object argument containing the options for the holiday. The
 | -------: | :------------------------------
 | mainInfo | An optional object returned from `getHoliday()` and used when filtering results. May be a function which will then be called each time `getHoliday()` and `isHoliday()` is called and the holiday is a match on that date. This allows returning a fresh object each time. This is also the default "info" when either of the other 2 "info" properties is not specified. Defaults to an empty object. If "mainInfoWhenObserved" is specified as well then this one will only be used for a year when there is **not** an "observed date".
 | observedInfo | Same as `mainInfo` except it's returned when the date is for the "observed date" of the holiday. Defaults to `mainInfo` if not specified.
-| mainInfoWhenObserved | same as `mainInfo` except it's returned when the date is the "main date" of the holiday but is on a weekend so the holiday is "observed" on another date. Defaults to `mainInfo` if not specified.
+| mainInfoWhenObserved | Same as `mainInfo` except, it's returned when the date is the "main date" of the holiday, but is on a weekend, so the holiday is "observed" on another date. Defaults to `mainInfo` if not specified.
 | month | The month of the holiday. Uses 0-11 as JavaScript `Date` does.
 | day | The day of the month of the holiday. Uses 1-31. Used for a "fixed date" holiday which is always on the same date.
 | firstDay | The first day in a range of dates the holiday may be on. Used with `lastDay`. For holidays which may be on different dates and ones with possible "observed" dates (usually before or after the "main date").
 | lastDay | The last day in a range of dates the holiday may be on. Used with `firstDay`.
 | dateRange | Provide multiple date ranges for a holiday which has a range spanning more than one month or year. For example, New Year's may be observed on December 31st which is both the previous month and previous year. An array of sub-arrays with each sub-array containing 2 elements: the month and the day, or 3 elements: the month, firstDay, and lastDay.
-| is | the test function which specifies whether a specific date is: 1. the "main date" without an "observed date" that year; 2. the "observed date"; 3. the "main date" with an "observed date" that year. Its arguments are `is(date, day, month, year)`. The later args are there for convenience because `Holidays` has already called the functions on the `date` to get those values for itself.
+| is | The test function which specifies whether a specific date is: 1. the "main date" without an "observed date" that year; 2. the "observed date"; 3. the "main date" with an "observed date" that year. Its arguments are `is(date, day, month, year)`. The later args are there for convenience because `Holidays` has already called the functions on the `date` to get those values for itself.
 | cache | Defaults to `false`. When set to `true` results of calling the `is()` will be cached in an object by year/month/day. Call `holidays.purge()` to replace all holiday cache objects with new empty objects.
 
 Read later sections about specific options. Below, let's look at them all together:
@@ -383,6 +383,15 @@ holidays.add({
       default: return 0
     }
   },
+})
+
+// any of the three "info" properties may specify a function instead of an Object.
+// they must return an Object.
+// this allows fresh objects to be returned each time it's needed.
+holidays.add({
+  mainInfo: () => { return { some: 'new object' } },
+  month: 4,
+  day: 5,
 })
 
 // by default, no caching is done. The `is()` function will be called each time.
