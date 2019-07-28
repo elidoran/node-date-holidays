@@ -27,7 +27,10 @@ const holidays = Holidays()
 
 // simplest method for fixed dates only requires the month and day.
 const removerFn = holidays.add({
-  mainInfo: { // optional, defaults to an empty object.
+  // optional holiday info.
+  // defaults to {}.
+  // may be a function returning an object.
+  mainInfo: {
     name: 'Valentine\'s Day',
     public: true,
   },
@@ -68,7 +71,7 @@ holidays.add({
 
   // optional holiday info.
   // defaults to {}.
-  // may be function returning an object.
+  // may be a function returning an object.
   mainInfo: {
     name: 'Independence Day',
     public: true, // it's a public holiday in USA
