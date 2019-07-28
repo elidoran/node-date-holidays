@@ -17,12 +17,20 @@
   "author": "Eli Doran <eli+npm@elidoran.com>",
   "license": "MIT",
   "scripts": {
-    "test": "mocha --require coffee-script/register --reporter spec --bail --check-leaks test/lib/*.coffee",
-    "test6": "nave use 6 npm test",
+    "lint": "eslint --no-eslintrc -c build/eslint/eslint.js --cache --cache-location build/eslint/cache index.js",
+    "test": "mocha --reporter spec --bail --check-leaks test/test.js",
     "test8": "nave use 8 npm test",
     "test10": "nave use 10 npm test",
-    "test-all": "npm run test6 && npm run test8 && npm run test10",
-    "coverage": "istanbul cover -x 'build/**' _mocha -- --require coffee-script/register -R spec test/lib/*.coffee"
+    "test12": "nave use 12 npm test",
+    "tests": "npm run test8 && npm run test10 && npm run test12",
+    "cover": "nyc --silent --no-clean npm run test",
+    "cover8": "nave use 8 npm run cover",
+    "cover10": "nave use 10 npm run cover",
+    "cover12": "nave use 12 npm run cover",
+    "covers": "npm run cover8 && npm run cover10 && npm run cover12",
+    "coverage": "npm run covers && nyc report --reporter=lcov --reporter=text-summary",
+    "travis": "npm run covers && nyc report --reporter=text-lcov | coveralls",
+    "browser": "npm run cover && nyc report --reporter=html"
   },
   "repository": {
     "type": "git",
@@ -30,15 +38,17 @@
   },
   "bugs": "http://github.com/elidoran/node-date-holidays/issues",
   "devDependencies": {
-    "coffee-script": "^1.12.7",
-    "coveralls": "^3.0.2",
+    "coveralls": "^3.0.4",
+    "eslint": "^6.0.1",
     "istanbul": "^0.4.5",
-    "mocha": "^5.2.0"
+    "mocha": "^6.1.4",
+    "mocha-lcov-reporter": "^1.3.0",
+    "nave": "^2.4.2",
+    "nyc": "^14.1.1"
   },
   "dependencies": {
-    "@flatten/array": "^1.1.7"
   },
   "engines": {
-    "node": ">=6"
+    "node": ">=8"
   }
 }

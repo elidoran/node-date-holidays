@@ -1,3 +1,22 @@
+### 0.4.0 - 2019/07/28
+
+1. total rewrite with breaking API changes
+2. switch tests from CS to JS
+3. add 2019 to LICENSE
+4. drop node 6, add node 12
+5. start using nyc for test coverage
+6. change Travis CI to do all testing in node 12 using nave to run in node 8 and 10
+7. also, it now runs tests in linux, macos, and windows via Travis CI
+8. also, it only reports coverage results to coveralls from one vm
+9. add `load()` and `loadMany()` to load a holiday with default info from a published npm package; now each holiday can be published individually so we can use only the holidays we want. and, we can override the info used with a holiday.
+10. holidays instances no longer keep a cache. each individual holiday can be configured to cache their results and `purge()` will clear those completely.
+11. instead of running all generators for a full year and storing them, test functions are stored by day and run based on the `Date` provided.
+12. multiple ways to specify the date(s) a holiday can be on.
+13. allows info for the main date for a holiday, its observed day (if it has one), and info for the main date when that year has an observed day.
+14. info can be a function which will be run each time `getHoliday()` and `isHoliday()` is run.
+15. add linting via eslint
+
+
 ### 0.3.2 - 2018/07/20
 
 1. fixed custom additional year by generating all holidays for the custom year (instead of just creating an empty object for the year, because that prevented generating for that year)
