@@ -262,8 +262,8 @@ Add accepts a single object argument containing the options for the holiday. The
 
 
 | property | purpose |
-|---------+|+------------------------------|
-|mainInfo | An optional object returned from `getHoliday()` and used when filtering results. May be a function which will then be called each time `getHoliday()` and `isHoliday()` is called and the holiday is a match on that date. This allows returning a fresh object each time. This is also the default "info" when either of the other 2 "info" properties is not specified. Defaults to an empty object. If "mainInfoWhenObserved" is specified as well then this one will only be used for a year when there is **not** an "observed date".
+| -------: | :------------------------------
+| mainInfo | An optional object returned from `getHoliday()` and used when filtering results. May be a function which will then be called each time `getHoliday()` and `isHoliday()` is called and the holiday is a match on that date. This allows returning a fresh object each time. This is also the default "info" when either of the other 2 "info" properties is not specified. Defaults to an empty object. If "mainInfoWhenObserved" is specified as well then this one will only be used for a year when there is **not** an "observed date".
 | observedInfo | Same as `mainInfo` except it's returned when the date is for the "observed date" of the holiday. Defaults to `mainInfo` if not specified.
 | mainInfoWhenObserved | same as `mainInfo` except it's returned when the date is the "main date" of the holiday but is on a weekend so the holiday is "observed" on another date. Defaults to `mainInfo` if not specified.
 | month | The month of the holiday. Uses 0-11 as JavaScript `Date` does.
@@ -508,12 +508,12 @@ holidays.add({
 The `is()` function returns a value in the range of zero to three for the specified date. The values mean:
 
 
-| value | meaning |
-|-----+|+-----------|
-| 0 | not a match for the holiday.
-| 1 | is the "main date" of the holiday in a year **without** an "observed date".
-| 2 | is the "observed date" of the holiday for that year.
-| 3 | is the "main date" of the holiday in a year **with** an "observed date".
+value  | meaning |
+ -----: | :----------- |
+0 | not a match for the holiday.
+1 | is the "main date" of the holiday in a year **without** an "observed date".
+2 | is the "observed date" of the holiday for that year.
+3 | is the "main date" of the holiday in a year **with** an "observed date".
 
 The `is()` function is optional for "simple fixed dates". The date info may be specified (see section above) and an `is()` function will be created for it.
 
