@@ -27,7 +27,7 @@ const holidays = Holidays()
 
 // simplest method for fixed dates only requires the month and day.
 const removerFn = holidays.add({
-  mainInfo: {
+  mainInfo: { // optional, defaults to an empty object.
     name: 'Valentine\'s Day',
     public: true,
   },
@@ -45,7 +45,7 @@ removerFn()
 
 Some holidays require calculating when they occur, and, whether they have an "observed" date as well.
 
-Specify the range of dates the holiday can occur on and an `is(<Date>)` function to test whether a `Date` is the holiday.
+Specify the range of dates the holiday can occur on and an `is()` function to test whether a `Date` is a holiday.
 
 ```javascript
 // this holiday is available as: @date/IndependenceDay
@@ -53,7 +53,7 @@ Specify the range of dates the holiday can occur on and an `is(<Date>)` function
 // It has an "observed" holiday on the nearest weekday if it's on the weekend
 holidays.add({
   // first way to specify the holiday's date range.
-  month: 6, // July is 6 cuz Date uses 0-11
+  month: 6, // July is 6 because Date because 0-11
   firstDay: 3,
   lastDay: 5,
 
@@ -121,10 +121,10 @@ holidays.add({
 holidays.add({
   // all three "info" objects are optional.
   dateRange: [
-    [ 12, 31 ], // specific day: December 31st
-    [ 0, 1, 2 ] // range of days: January 1st to 2nd
+    [ 12, 31 ],  // specific day: December 31st
+    [ 0, 1, 2 ], // range of days: January 1st to 2nd
   ],
-  is: (date, day, month) => {
+  is: (date, day, month, year) => {
     // Holidays ensures the date we receive is within the range we specified.
     // so, we need to look at the day of week to determine our result.
     const weekday = date.getDay()
@@ -142,7 +142,7 @@ holidays.add({
       default: // otherwise, not a match
         return 0
     }
-  }
+  },
 })
 
 // a date may not have a set number which requires more processing.
@@ -152,7 +152,7 @@ holidays.add({
   },
 
   // it's the third Sunday in June.
-  // so, month is 5 cuz Date uses 0-11,
+  // so, month is 5 because Date uses 0-11,
   // and, the days it could be on are June 15th to 21st.
   dateRange: [
     [ 5, 15, 21 ]
@@ -204,12 +204,12 @@ If there are no holidays on the date then an empty array is returned.
 
 The "info" is an optional object provided when calling `holidays.add()`.
 
-See [API: add()](#api-add)
+See [API: add()](#api-addobject)
 
 ```javascript
 infos = holidays.getHoliday(date)
 
-if (infos.length > 1) {
+if (infos.length > 0) {
   // then there was at least one holiday on that date.
 }
 
@@ -225,7 +225,7 @@ infos = holidays.getHoliday(date, {
 
 Load a published holiday package into a `Holidays` instance.
 
-May override default options for the holiday by providing an object as the second argument. It may contain any properties used in [add()](). The default options and the specified options will be combined.
+May override default options for the holiday by providing an object as the second argument. It may contain any properties used in [add()](#api_addobject). The default options and the specified options will be combined.
 
 For convenience, `loadMany()` accepts an array of arrays. Each sub-array should have the package name as the first element and an optional options override object as the second element.
 
@@ -249,29 +249,30 @@ holidays.loadMany([ // NOTE: argument is an array of sub-arrays.
   [ 'package-name' ],
 
   // or, they may also have an options override object:
-  [ 'some-name', { name: 'Changed Holiday Name', cache: true }]
+  [ 'some-name', { name: 'Changed Holiday Name', cache: true } ]
 ])
 ```
 
 
 ### API: add(Object)
 
-Adds a holiday to the `holidays` instance for `getHoliday()` and `isHoliday()`.
+Adds a holiday to the `holidays` instance.
 
 Add accepts a single object argument containing the options for the holiday. The possible options are:
 
-property | purpose
---------+|+------------------------------
-mainInfo | An optional object returned from `getHoliday()` and used when filtering results. May be a function which will then be called each time `getHoliday()` and `isHoliday()` is called and the holiday is a match on that date. This allows returning a fresh object each time. This is also the default "info" when either of the other 2 "info" properties is not specified. Defaults to an empty object. If "mainInfoWhenObserved" is specified as well then this one will only be used for a year when there is **not** an "observed date".
-observedInfo | Same as `mainInfo` except it's returned when the date is for the "observed date" of the holiday. Defaults to `mainInfo` if not specified.
-mainInfoWhenObserved | same as `mainInfo` except it's returned when the date is the "main date" of the holiday but is on a weekend so the holiday is "observed" on another date. Defaults to `mainInfo` if not specified.
-month | The month of the holiday. Uses 0-11 as JavaScript `Date` does.
-day | The day of the month of the holiday. Uses 1-31. Used for a "fixed date" holiday which is always on the same date.
-firstDay | The first day in a range of dates the holiday may be on. Used with `lastDay`. For holidays which may be on different dates and ones with possible "observed" dates (usually before or after the "main date").
-lastDay | The last day in a range of dates the holiday may be on. Used with `firstDay`.
-dateRange | Provide multiple date ranges for a holiday which has a range spanning more than one month or year. For example, New Year's may be observed on December 31st which is both the previous month and previous year. An array of sub-arrays with each sub-array containing 2 elements: the month and the day, or 3 elements: the month, firstDay, and lastDay.
-is | the test function which specifies whether a specific date is: 1. the "main date" without an "observed date" that year; 2. the "observed date"; 3. the "main date" with an "observed date" that year. Its arguments are `is(date, day, month, year)`. The later args are there for convenience because `Holidays` has already called the functions on the `date` to get those values for itself.
-cache | Defaults to `false`. When set to `true` results of calling the `is()` will be cached in an object by year/month/day. Call `holidays.purge()` to replace all holiday cache objects with new empty objects.
+
+| property | purpose |
+|---------+|+------------------------------|
+|mainInfo | An optional object returned from `getHoliday()` and used when filtering results. May be a function which will then be called each time `getHoliday()` and `isHoliday()` is called and the holiday is a match on that date. This allows returning a fresh object each time. This is also the default "info" when either of the other 2 "info" properties is not specified. Defaults to an empty object. If "mainInfoWhenObserved" is specified as well then this one will only be used for a year when there is **not** an "observed date".
+| observedInfo | Same as `mainInfo` except it's returned when the date is for the "observed date" of the holiday. Defaults to `mainInfo` if not specified.
+| mainInfoWhenObserved | same as `mainInfo` except it's returned when the date is the "main date" of the holiday but is on a weekend so the holiday is "observed" on another date. Defaults to `mainInfo` if not specified.
+| month | The month of the holiday. Uses 0-11 as JavaScript `Date` does.
+| day | The day of the month of the holiday. Uses 1-31. Used for a "fixed date" holiday which is always on the same date.
+| firstDay | The first day in a range of dates the holiday may be on. Used with `lastDay`. For holidays which may be on different dates and ones with possible "observed" dates (usually before or after the "main date").
+| lastDay | The last day in a range of dates the holiday may be on. Used with `firstDay`.
+| dateRange | Provide multiple date ranges for a holiday which has a range spanning more than one month or year. For example, New Year's may be observed on December 31st which is both the previous month and previous year. An array of sub-arrays with each sub-array containing 2 elements: the month and the day, or 3 elements: the month, firstDay, and lastDay.
+| is | the test function which specifies whether a specific date is: 1. the "main date" without an "observed date" that year; 2. the "observed date"; 3. the "main date" with an "observed date" that year. Its arguments are `is(date, day, month, year)`. The later args are there for convenience because `Holidays` has already called the functions on the `date` to get those values for itself.
+| cache | Defaults to `false`. When set to `true` results of calling the `is()` will be cached in an object by year/month/day. Call `holidays.purge()` to replace all holiday cache objects with new empty objects.
 
 Read later sections about specific options. Below, let's look at them all together:
 
@@ -287,7 +288,7 @@ holidays.add({
 // now returns true for any year:
 holidays.isHoliday(new Date(2000, 2, 3))
 
-// result is always an array containing holiday info's for the Date.
+// result is always an array containing holiday infos for the Date.
 // in this instance, it has one element which is the default empty object.
 result = holidays.getHoliday(new Date(2000, 2, 3))
 
@@ -346,7 +347,7 @@ holidays.add({
     // many holidays are one a set date and may have an observed date
     // a day before or a day after it. So, a range of 3 days.
     // can be in month 1 between the 2nd and 4th:
-    [ 1, 2, 4 ]
+    [ 1, 2, 4 ],
   ],
 
   // method #2 of specifying a date range:
@@ -370,13 +371,13 @@ holidays.add({
     // based on the weekday you can determine whether it's main/observed/main-when-observed.
     switch(day) {
       // 2 for February 2nd which is the observed holiday when it's a Friday
-      case 2: return (weekday === 5) ? 2 : 0  // Friday February 2nd is "observed"
+      case 2: return (weekday === 5) ? 2 : 0
 
       // 3 for February 3rd, always a holiday, but is either main, or "main when observed"
       case 3: return (1 <= weekday && weekday <= 5) ? 1 : 3
 
       // 4 for February 4th which is the observed holiday when it's a Monday
-      case 4: return (weekday === 1) ? 2 : 0  // Monday July 5th is "observed"
+      case 4: return (weekday === 1) ? 2 : 0
 
       // otherwise, not a match for the holiday.
       default: return 0
@@ -506,12 +507,13 @@ holidays.add({
 
 The `is()` function returns a value in the range of zero to three for the specified date. The values mean:
 
-value | meaning
------+|+-----------
-0 | not a match for the holiday.
-1 | is the "main date" of the holiday in a year **without** an "observed date".
-2 | is the "observed date" of the holiday for that year.
-3 | is the "main date" of the holiday in a year **with** an "observed date".
+
+| value | meaning |
+|-----+|+-----------|
+| 0 | not a match for the holiday.
+| 1 | is the "main date" of the holiday in a year **without** an "observed date".
+| 2 | is the "observed date" of the holiday for that year.
+| 3 | is the "main date" of the holiday in a year **with** an "observed date".
 
 The `is()` function is optional for "simple fixed dates". The date info may be specified (see section above) and an `is()` function will be created for it.
 
@@ -552,7 +554,7 @@ holidays.add({
       // otherwise, not a match for the holiday.
       default: return 0
     }
-  }
+  },
 })
 
 // a variable date holiday:
@@ -567,7 +569,7 @@ holidays.add({ // Father's day is third Sunday in June
     // so, all we care about is whether it's Sunday.
     const weekday = date.getDay()
     return (weekday === 0) ? 1 : 0
-  }
+  },
 })
 ```
 
@@ -589,7 +591,7 @@ removerFn()
 
 ### API: purge()
 
-When `cache:true` is specified in a holiday's options it will cache its results to avoid calling its `is()` function.
+When `cache:true` is specified in a holiday's options it will cache its results to avoid calling its `is()` function repeatedly for the same date.
 
 Each caching holiday creates its own cache object.
 
