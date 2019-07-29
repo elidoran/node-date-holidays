@@ -1,3 +1,7 @@
+### 0.4.2 - 2019/07/28
+
+1. fix main in package.json
+
 ### 0.4.1 - 2019/07/28
 
 1. fix files list in package.json
