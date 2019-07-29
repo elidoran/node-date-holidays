@@ -4,7 +4,7 @@
   "description": "Store and compare holiday dates",
   "main": "lib",
   "files": [
-    "lib/index.js"
+    "index.js"
   ],
   "keywords": [
     "holiday",
