@@ -89,7 +89,7 @@ class Holidays {
 
     if (
       // month + day,  or,  month + firstDay + lastDay
-      !(options.month && (options.day || (options.firstDay && options.lastDay)))
+      !('number' === typeof options.month && (options.day || (options.firstDay && options.lastDay)))
       // dateRange with length of 2-3
       && !(options.dateRange && options.dateRange.length > 0)
     ) {
@@ -174,7 +174,7 @@ class Holidays {
     }
 
     // else, we build our own tester function based on the simple date.
-    else if (options.month && options.day) {
+    else if ('number' === typeof options.month && options.day) {
       const info = this.asFn(options.mainInfo || {})
 
       const simpleIs = function() {
