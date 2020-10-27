@@ -169,7 +169,7 @@ class Holidays {
 
       // should have dateRange, or specific simple date or simple date range.
       range = options.dateRange
-        || (options.month && options.day && [[options.month, options.day]])
+        || ('number' === typeof options.month && options.day && [[options.month, options.day]])
         || [[options.month, options.firstDay, options.lastDay]]
     }
 
