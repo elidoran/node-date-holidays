@@ -39,6 +39,13 @@ describe('test holidays', () => {
         assert.throws(() => { Holidays().add() }, { message: 'options object required' })
       })
 
+      it('should not error if month === 0', () => {
+        const removerFn = Holidays().add({ day: 1, month: 0 })
+
+        assert(removerFn, 'should return a remover')
+        assert('function' === typeof removerFn, 'returned remover should be a function')
+      })
+
       it('should error without date info', () => {
         assert.throws(() => { Holidays().add({}) }, { message: 'date info required' })
       })
